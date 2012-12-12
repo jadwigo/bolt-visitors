@@ -36,7 +36,7 @@ function info()
  * Initialize Visitors. Called during bootstrap phase.
  *
  * Checks if a visitor is known, and loads the associated visitor
- * Also handles the routing
+ * Also handles the routing for login, logout and view
  */
 function init($app)
 {
@@ -51,22 +51,27 @@ function init($app)
       $basepath = "visitors";
   }
 
-  // View account page
+  // View visitor page
   $app->get("/{$basepath}", '\Visitors\view')
     ->before('Bolt\Controllers\Frontend::before')
     ->bind('visitors');
+  
+  // View visitor page (again)
+  $app->get("/{$basepath}/view", '\Visitors\view')
+    ->before('Bolt\Controllers\Frontend::before')
+    ->bind('visitorsview');
 
-  // Login to account page
+  // Login to visitor page
   $app->get("/{$basepath}/login", '\Visitors\login')
     ->before('Bolt\Controllers\Frontend::before')
     ->bind('visitorslogin');
   
-  // Logout from account page
+  // Logout from visitor page
   $app->get("/{$basepath}/logout", '\Visitors\logout')
     ->before('Bolt\Controllers\Frontend::before')
     ->bind('visitorslogout');
   
-  // View account page
+  // View visitor page
   $app->get("/{$basepath}/view", '\Visitors\view')
     ->before('Bolt\Controllers\Frontend::before')
     ->bind('visitorsview');
@@ -75,48 +80,51 @@ function init($app)
 
 /**
  * Login visitor page
+ *
+ * Prepare the visitor login from hybridauth
  */
 function login(Silex\Application $app) {
   $title = "login page";
-  return page($app, 'login', $title);
+  $markup = '';
+  return \Visitors\page($app, 'login', $title, $markup);
 }
 
 /**
  * Logout visitor page
+ *
+ * Remove / Reset a visitor session
  */
 function logout(Silex\Application $app) {
   $title = "logout page";
-  return page($app, 'logout', $title);
+  $markup = '';
+  return \Visitors\page($app, 'logout', $title, $markup);
 }
 
 /**
  * View visitor page
+ *
+ * View the current visitor
  */
 function view(Silex\Application $app) {
   $title = "view page";
-  return page($app, 'view', $title);
+  $markup = '';
+  return \Visitors\page($app, 'view', $title, $markup);
 }
 
 /**
- * Output stuff
+ * Output the results in the default template
  */
-function page(Silex\Application $app, $type, $title) {
+function page(Silex\Application $app, $type, $title, $markup) {
 
   // Make sure jQuery is included
   $app['extensions']->addJquery();
 
-  // Add javascript file
+  // Add javascript file only on the visitors pages
   $app['extensions']->addJavascript($app['paths']['app'] . "extensions/Visitors/assets/visitors.js");
 
-  $template = 'error.twig';
-  $twigvars = array(
-    'message' => $title,
-    'class' => 'visitor',
-    'code' => 'ok'
-  );
-  
-  $body = $app['twig']->render($template, $twigvars);
+  $template = 'base.twig';
+ 
+  $body = $app['twig']->render($template, array('title' => $title, 'markup' => $markup));
 
   return new Response($body, 200, array('Cache-Control' => 's-maxage=3600, public'));
-
 }
