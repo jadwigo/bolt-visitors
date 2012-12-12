@@ -33,29 +33,41 @@ function info()
 }
 
 /**
-* Initialize Visitors. Called during bootstrap phase.
-*
-* checks if a visitor is known, and loads the associated visitor
-*/
+ * Initialize Visitors. Called during bootstrap phase.
+ *
+ * Checks if a visitor is known, and loads the associated visitor
+ * Also handles the routing
+ */
 function init($app)
 {
+
+  $yamlparser = new \Symfony\Component\Yaml\Parser();
+  $config = $yamlparser->parse(file_get_contents(__DIR__.'/config.yml'));
+
+  // Make sure a '$basepath' is set
+  if (isset($config['basepath'])) {
+      $basepath = $config['basepath'];
+  } else {
+      $basepath = "visitors";
+  }
+
   // View account page
-  $app->get("/visitors", '\Visitors\view')
+  $app->get("/{$basepath}", '\Visitors\view')
     ->before('Bolt\Controllers\Frontend::before')
     ->bind('visitors');
 
   // Login to account page
-  $app->get("/visitors/login", '\Visitors\login')
+  $app->get("/{$basepath}/login", '\Visitors\login')
     ->before('Bolt\Controllers\Frontend::before')
     ->bind('visitorslogin');
   
   // Logout from account page
-  $app->get("/visitors/logout", '\Visitors\logout')
+  $app->get("/{$basepath}/logout", '\Visitors\logout')
     ->before('Bolt\Controllers\Frontend::before')
     ->bind('visitorslogout');
   
   // View account page
-  $app->get("/visitors/view", '\Visitors\view')
+  $app->get("/{$basepath}/view", '\Visitors\view')
     ->before('Bolt\Controllers\Frontend::before')
     ->bind('visitorsview');
 
