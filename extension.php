@@ -212,13 +212,6 @@ function view(Silex\Application $app) {
  * Output the results in the default template
  */
 function page(Silex\Application $app, $type, $title, $markup) {
-
-  // Make sure jQuery is included
-  $app['extensions']->addJquery();
-
-  // Add javascript file only on the visitors pages
-  $app['extensions']->addJavascript($app['paths']['app'] . "extensions/Visitors/assets/visitors.js");
-
   $template = 'base.twig';
  
   $body = $app['twig']->render($template, array('title' => $title, 'markup' => $markup));
