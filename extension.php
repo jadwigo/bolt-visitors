@@ -18,9 +18,9 @@ function info()
     'description' => "An extension to remember authenticated visitors on your bolt.cm site",
     'author' => "Lodewijk Evers",
     'link' => "https://github.com/jadwigo/bolt-visitors",
-    'version' => "0.2",
+    'version' => "0.3",
     'required_bolt_version' => "0.7.10",
-    'highest_bolt_version' => "0.7.10",
+    'highest_bolt_version' => "0.8.5",
     'type' => "General",
     'first_releasedate' => "2012-12-12",
     'latest_releasedate' => "2012-12-12",
@@ -41,15 +41,9 @@ function info()
 function init(Silex\Application $app)
 {
 
-  $yamlparser = new \Symfony\Component\Yaml\Parser();
-  $config = $yamlparser->parse(file_get_contents(__DIR__.'/config.yml'));
-
-  // Make sure a '$basepath' is set
-  if (isset($config['basepath'])) {
-      $basepath = $config['basepath'];
-  } else {
-      $basepath = "visitors";
-  }
+  // get the extension configuration
+  $config = \Visitors\loadconfig();
+  $basepath = $config['basepath'];
 
   $recognizedvisitor = \Visitors\checkvisitor();
  
@@ -88,7 +82,28 @@ function init(Silex\Application $app)
 }
 
 /**
+ * Reuseable config
+ */
+function loadconfig() {
+  // get the extension configuration
+  $yamlparser = new \Symfony\Component\Yaml\Parser();
+  $config = $yamlparser->parse(file_get_contents(__DIR__.'/config.yml'));
+
+  // Make sure a $config['basepath'] is set
+  if (!isset($config['basepath'])) {
+      $config['basepath'] = "visitors";
+  }
+
+  // set an endpoint
+  $config["base_url"] = $app['paths']['rooturl'] . $config['basepath'] . '/endpoint';
+  
+  return $config;
+}
+
+/**
  * Check who the visitor is
+ *
+ * TODO: make it actually recognize a visitor
  */
 function checkvisitor() {
   return false;
@@ -103,18 +118,7 @@ function login(Silex\Application $app) {
   $title = "login page";
 
   // get the extension configuration
-  $yamlparser = new \Symfony\Component\Yaml\Parser();
-  $config = $yamlparser->parse(file_get_contents(__DIR__.'/config.yml'));
-
-  // Make sure a '$basepath' is set
-  if (isset($config['basepath'])) {
-      $basepath = $config['basepath'];
-  } else {
-      $basepath = "visitors";
-  }
-  // set an endpoint
-  $base_url = $app['paths']['rooturl'] . $basepath . '/endpoint';
-  $config["base_url"] = $base_url;
+  $config = \Visitors\loadconfig();
   
   //$markup .= \util::var_dump($config, true);
  
@@ -147,7 +151,7 @@ function login(Silex\Application $app) {
   } else {
     foreach($config['providers'] as $provider => $values) {
       if($values['enabled']==true) {
-        $providers[] = '<li><a class="login '. $provider .'" href="/'.$basepath.'/login?provider='. $provider .'">'. $provider .'</a></li>';
+        $providers[] = '<li><a class="login '. $provider .'" href="/'.$config['basepath'].'/login?provider='. $provider .'">'. $provider .'</a></li>';
       }
     }
     $markup .= "<h2>Login with one of the following</h2>\n";
@@ -165,18 +169,7 @@ function login(Silex\Application $app) {
  */
 function endpoint() {
   // get the extension configuration
-  $yamlparser = new \Symfony\Component\Yaml\Parser();
-  $config = $yamlparser->parse(file_get_contents(__DIR__.'/config.yml'));
-
-  // Make sure a '$basepath' is set
-  if (isset($config['basepath'])) {
-      $basepath = $config['basepath'];
-  } else {
-      $basepath = "visitors";
-  }
-  // set an endpoint
-  $base_url = $app['paths']['rooturl'] . $basepath . '/endpoint';
-  $config["base_url"] = $base_url;
+  $config = \Visitors\loadconfig();
 
   require_once( __DIR__."/hybridauth/hybridauth/Hybrid/Auth.php" );
   require_once( __DIR__."/hybridauth/hybridauth/Hybrid/Endpoint.php" ); 
