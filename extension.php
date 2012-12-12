@@ -38,7 +38,7 @@ function info()
  * Checks if a visitor is known, and loads the associated visitor
  * Also handles the routing for login, logout and view
  */
-function init($app)
+function init(Silex\Application $app)
 {
 
   $yamlparser = new \Symfony\Component\Yaml\Parser();
@@ -50,6 +50,10 @@ function init($app)
   } else {
       $basepath = "visitors";
   }
+
+  $recognizedvisitor = \Visitors\checkvisitor();
+ 
+  $app['log']->add(\util::var_dump($recognizedvisitor, true));
 
   // View visitor page
   $app->get("/{$basepath}", '\Visitors\view')
@@ -76,6 +80,18 @@ function init($app)
     ->before('Bolt\Controllers\Frontend::before')
     ->bind('visitorsview');
 
+  // Endpoint for hybridauth
+  $app->match("/{$basepath}/endpoint", '\Visitors\endpoint')
+    ->before('Bolt\Controllers\Frontend::before')
+    ->bind('visitorsendpoint');
+
+}
+
+/**
+ * Check who the visitor is
+ */
+function checkvisitor() {
+  return false;
 }
 
 /**
@@ -85,9 +101,90 @@ function init($app)
  */
 function login(Silex\Application $app) {
   $title = "login page";
-  $markup = '';
+
+  // get the extension configuration
+  $yamlparser = new \Symfony\Component\Yaml\Parser();
+  $config = $yamlparser->parse(file_get_contents(__DIR__.'/config.yml'));
+
+  // Make sure a '$basepath' is set
+  if (isset($config['basepath'])) {
+      $basepath = $config['basepath'];
+  } else {
+      $basepath = "visitors";
+  }
+  // set an endpoint
+  $base_url = $app['paths']['rooturl'] . $basepath . '/endpoint';
+  $config["base_url"] = $base_url;
+  
+  //$markup .= \util::var_dump($config, true);
+ 
+  $provider = \util::get_var('provider', false);
+
+  if($provider) {
+
+    require_once( __DIR__."/hybridauth/hybridauth/Hybrid/Auth.php" );
+
+    try{
+      // initialize Hybrid_Auth with a given file
+      $hybridauth = new \Hybrid_Auth( $config );
+
+      // try to authenticate with the selected provider
+      $adapter = $hybridauth->authenticate( $provider );
+
+      // then grab the user profile 
+      $user_profile = $adapter->getUserProfile();
+
+      // TODO: check if user profile is known internally - and load it
+      // TODO: create a new user profile if it does not exist yet - and load it
+
+      // show us the money
+      $markup .= \util::var_dump($user_profile, true);
+    }
+    catch( Exception $e ){
+      echo "Error: please try again!";
+      echo "Original error message: " . $e->getMessage();
+    }
+  } else {
+    foreach($config['providers'] as $provider => $values) {
+      if($values['enabled']==true) {
+        $providers[] = '<li><a class="login '. $provider .'" href="/'.$basepath.'/login?provider='. $provider .'">'. $provider .'</a></li>';
+      }
+    }
+    $markup .= "<h2>Login with one of the following</h2>\n";
+    $markup .= '<ul>'.join("\n", $providers)."</ul>\n";
+  }
+
+  // login the visitor
+  $recognizedvisitor = \Visitors\checkvisitor();
+
   return \Visitors\page($app, 'login', $title, $markup);
 }
+
+/**
+ * Hybrid auth endpoint
+ */
+function endpoint() {
+  // get the extension configuration
+  $yamlparser = new \Symfony\Component\Yaml\Parser();
+  $config = $yamlparser->parse(file_get_contents(__DIR__.'/config.yml'));
+
+  // Make sure a '$basepath' is set
+  if (isset($config['basepath'])) {
+      $basepath = $config['basepath'];
+  } else {
+      $basepath = "visitors";
+  }
+  // set an endpoint
+  $base_url = $app['paths']['rooturl'] . $basepath . '/endpoint';
+  $config["base_url"] = $base_url;
+
+  require_once( __DIR__."/hybridauth/hybridauth/Hybrid/Auth.php" );
+  require_once( __DIR__."/hybridauth/hybridauth/Hybrid/Endpoint.php" ); 
+
+  \Hybrid_Endpoint::process();
+
+}
+
 
 /**
  * Logout visitor page
