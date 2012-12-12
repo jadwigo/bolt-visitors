@@ -1,3 +1,4 @@
 # Configuration file for Visitors
 
-setting: value
+# enabled OpenID providers
+providers: [ 'Google', 'Facebook', 'Twitter', 'Live', 'Custom' ]
