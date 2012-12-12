@@ -21,3 +21,17 @@ An example of the provider keys
 	    keys:
 	      id: "*** your id here ***"
 	      secret: "*** your secret here ***"
+
+Known issues
+======================
+This extension needs a base template in the current theme called `base.twig` e.g.:
+
+	{% include '_header.twig' %}
+
+	<h1>
+	    {{ title }}
+	</h1>
+
+	{{ markup }}
+
+	{% include '_footer.twig' %}
