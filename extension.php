@@ -18,13 +18,13 @@ function info()
     'description' => "An extension to remember authenticated visitors on your bolt.cm site",
     'author' => "Lodewijk Evers",
     'link' => "https://github.com/jadwigo/bolt-visitors",
-    'version' => "0.1",
+    'version' => "0.2",
     'required_bolt_version' => "0.7.10",
     'highest_bolt_version' => "0.7.10",
     'type' => "General",
     'first_releasedate' => "2012-12-12",
     'latest_releasedate' => "2012-12-12",
-    'dependancies' => "",
+    'dependencies' => "",
     'priority' => 10
   );
 
