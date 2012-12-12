@@ -1,4 +1,9 @@
 # Configuration file for Visitors
 
+# the basepath for the extension
+# this path defaults to /visitors/login, /visitors/view and /visitors/logout
+basepath: 'visitors'
+
 # enabled OpenID providers
+# options are dependent on the values for hybridauth
 providers: [ 'Google', 'Facebook', 'Twitter', 'Live', 'Custom' ]
