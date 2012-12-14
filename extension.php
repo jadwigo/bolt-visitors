@@ -42,10 +42,13 @@ function init(Silex\Application $app)
 {
 
   // get the extension configuration
-  $config = \Visitors\loadconfig();
+  $config = \Visitors\loadconfig($app);
   $basepath = $config['basepath'];
 
-  $recognizedvisitor = \Visitors\checkvisitor();
+  require_once __DIR__.'/src/Visitors/Visitor.php';
+  require_once __DIR__.'/src/Visitors/Session.php';
+
+  $recognizedvisitor = \Visitors\checkvisitor($app);
  
   $app['log']->add(\util::var_dump($recognizedvisitor, true));
 
@@ -85,7 +88,7 @@ function init(Silex\Application $app)
 /**
  * Reuseable config
  */
-function loadconfig() {
+function loadconfig(Silex\Application $app) {
   // get the extension configuration
   $yamlparser = new \Symfony\Component\Yaml\Parser();
   $config = $yamlparser->parse(file_get_contents(__DIR__.'/config.yml'));
@@ -97,17 +100,32 @@ function loadconfig() {
 
   // set an endpoint for hybridauth to authenticate with
   $config["base_url"] = $app['paths']['rooturl'] . $config['basepath'] . '/endpoint';
-  
+
   return $config;
 }
 
 /**
  * Check who the visitor is
- *
- * TODO: make it actually recognize a visitor
  */
-function checkvisitor() {
-  return false;
+function checkvisitor(Silex\Application $app) {
+
+  $session = new \Visitors\Session($app);
+  //\util::var_dump($session);
+  //$sessions = $session->active();
+  //\util::var_dump($sessions);
+
+  $token = $app['session']->get('visitortoken');
+  //\util::var_dump($token);
+
+  $current = $session->load($token);
+  //\util::var_dump($current);
+
+  $visitor = new \Visitors\Visitor($app);
+  $current_visitor = $visitor->load_by_id($current['visitor_id']);
+  //\util::var_dump($current_visitor);
+  if($current_visitor) {
+    return $current_visitor;
+  }
 }
 
 /**
@@ -119,8 +137,17 @@ function login(Silex\Application $app) {
   $title = "login page";
 
   // get the extension configuration
-  $config = \Visitors\loadconfig();
-  
+  $config = \Visitors\loadconfig($app);
+
+  // login the visitor if avaulable
+  $recognizedvisitor = \Visitors\checkvisitor($app);
+
+  if($recognizedvisitor) {
+    // already logged in - show the account
+    return redirect($config['basepath']);
+    exit;
+  }
+
   //$markup .= \util::var_dump($config, true);
  
   $provider = \util::get_var('provider', false);
@@ -140,16 +167,38 @@ function login(Silex\Application $app) {
       $user_profile = $adapter->getUserProfile();
 
       // TODO: check if user profile is known internally - and load it
-      // TODO: create a new user profile if it does not exist yet - and load it
+      if($user_profile) {
+        $visitor = new \Visitors\Visitor($app);
+        $visitor->setProvider( $provider );
+        $visitor->setProfile( $user_profile );
+
+        $known_visitor = $visitor->checkExisting();
+
+        // TODO: create a new user profile if it does not exist yet - and load it
+        if(!$known_visitor) {
+          $known_visitor = $visitor->save();
+        }
+
+        $session = new \Visitors\Session($app);
+        $token = $session->login($known_visitor['id']);
+
+        $app['session']->setFlash('info', '<p>You are logged in as '.$visitor->visitor['username'].' now</p>');
+        
+        return redirect('homepage');
+      }
+
 
       // show us the money
-      $markup .= \util::var_dump($user_profile, true);
+      //$markup .= \util::var_dump($token, true);
+      //$markup .= \util::var_dump($user_profile, true);
+      //$markup .= \util::var_dump($known_visitor, true);
     }
     catch( Exception $e ){
       echo "Error: please try again!";
       echo "Original error message: " . $e->getMessage();
     }
   } else {
+    // TODO: make this a templateable block
     foreach($config['providers'] as $provider => $values) {
       if($values['enabled']==true) {
         $providers[] = '<li><a class="login '. $provider .'" href="/'.$config['basepath'].'/login?provider='. $provider .'">'. $provider .'</a></li>';
@@ -159,18 +208,17 @@ function login(Silex\Application $app) {
     $markup .= '<ul>'.join("\n", $providers)."</ul>\n";
   }
 
-  // login the visitor
-  $recognizedvisitor = \Visitors\checkvisitor();
-
   return \Visitors\page($app, 'login', $title, $markup);
 }
 
 /**
  * Hybrid auth endpoint
+ *
+ * This endpoint passes all login requests to hybridauth
  */
-function endpoint() {
+function endpoint(Silex\Application $app) {
   // get the extension configuration
-  $config = \Visitors\loadconfig();
+  $config = \Visitors\loadconfig($app);
 
   require_once( __DIR__."/hybridauth/hybridauth/Hybrid/Auth.php" );
   require_once( __DIR__."/hybridauth/hybridauth/Hybrid/Endpoint.php" ); 
@@ -184,6 +232,8 @@ function endpoint() {
  * Logout visitor page
  *
  * Remove / Reset a visitor session
+ *
+ * TODO: kill the current session
  */
 function logout(Silex\Application $app) {
   $title = "logout page";
@@ -197,8 +247,22 @@ function logout(Silex\Application $app) {
  * View the current visitor
  */
 function view(Silex\Application $app) {
-  $title = "view page";
   $markup = '';
+  $config = \Visitors\loadconfig($app);
+
+  // login the visitor
+  $recognizedvisitor = \Visitors\checkvisitor($app);
+
+  if($recognizedvisitor) {
+    $username = $recognizedvisitor['username'];
+    $title = "<p>Hello $username.</p>";
+    $markup .= \util::var_dump($recognizedvisitor, true);
+  } else {
+    // go directly to login page
+    return redirect($config['basepath'].'/login');
+  }
+
+
   return \Visitors\page($app, 'view', $title, $markup);
 }
 
