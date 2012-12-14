@@ -7,6 +7,8 @@ This extension uses <a href="http://hybridauth.sourceforge.net" target="_blank">
 
 Installation
 =======================
+Download and extract the extension to a directory called Visitors in your Bolt extension directory.
+
 Copy `config.yml.dist` to `config.yml` in the same directory.
 
 To enable a provider set the value `enabled: true` in the configuration and replace the example provider keys with real values.

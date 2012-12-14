@@ -8,8 +8,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
-* Info block for Visitors Extension.
-*/
+ * Info block for Visitors Extension.
+ */
 function info()
 {
 
@@ -23,7 +23,7 @@ function info()
     'highest_bolt_version' => "0.8.5",
     'type' => "General",
     'first_releasedate' => "2012-12-12",
-    'latest_releasedate' => "2012-12-12",
+    'latest_releasedate' => "2012-12-14",
     'dependencies' => "",
     'priority' => 10
   );
@@ -74,7 +74,8 @@ function init(Silex\Application $app)
     ->before('Bolt\Controllers\Frontend::before')
     ->bind('visitorsview');
 
-  // Endpoint for hybridauth
+  // Endpoint for hybridauth to authenticate with
+  // Callbacks and keys are routed here
   $app->match("/{$basepath}/endpoint", '\Visitors\endpoint')
     ->before('Bolt\Controllers\Frontend::before')
     ->bind('visitorsendpoint');
@@ -94,7 +95,7 @@ function loadconfig() {
       $config['basepath'] = "visitors";
   }
 
-  // set an endpoint
+  // set an endpoint for hybridauth to authenticate with
   $config["base_url"] = $app['paths']['rooturl'] . $config['basepath'] . '/endpoint';
   
   return $config;
