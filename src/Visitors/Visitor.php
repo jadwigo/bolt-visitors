@@ -63,7 +63,7 @@ class Visitor
         $stmt = $this->db->prepare($sql);
         $stmt->bindValue("visitorid", $visitor_id);
         $stmt->execute();
-        $visitors = $stmt->fetchAll();
+        $visitors = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         $this->visitor = array_shift($visitors);
         $this->profile = unserialize($this->visitor['providerdata']);
         return $this->visitor;

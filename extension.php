@@ -18,12 +18,12 @@ function info()
     'description' => "An extension to remember authenticated visitors on your bolt.cm site",
     'author' => "Lodewijk Evers",
     'link' => "https://github.com/jadwigo/bolt-visitors",
-    'version' => "0.3",
+    'version' => "0.4",
     'required_bolt_version' => "0.7.10",
     'highest_bolt_version' => "0.8.5",
     'type' => "General",
     'first_releasedate' => "2012-12-12",
-    'latest_releasedate' => "2012-12-14",
+    'latest_releasedate' => "2013-01-03",
     'dependencies' => "",
     'priority' => 10
   );
@@ -49,11 +49,24 @@ function init(Silex\Application $app)
   require_once __DIR__.'/src/Visitors/Session.php';
 
   $recognizedvisitor = \Visitors\checkvisitor($app);
- 
+
+
+  // define twig functions and vars
+  $app['twig']->addFunction('knownvisitor', new \Twig_Function_Function('Visitors\checkvisitor'));
+  $app['twig']->addFunction('showvisitorlogin', new \Twig_Function_Function('Visitors\showvisitorlogin'));
+  $app['twig']->addFunction('showvisitorlogout', new \Twig_Function_Function('Visitors\showvisitorlogout'));
+  $app['twig']->addFunction('showvisitorprofile', new \Twig_Function_Function('Visitors\showvisitorprofile'));
+  $app['twig']->addGlobal('visitor', $recognizedvisitor);
+
   $app['log']->add(\util::var_dump($recognizedvisitor, true));
 
   // View visitor page
   $app->get("/{$basepath}", '\Visitors\view')
+    ->before('Bolt\Controllers\Frontend::before')
+    ->bind('visitors');
+
+  // for those people who add slashes to the end of the uri
+  $app->get("/{$basepath}/", '\Visitors\view')
     ->before('Bolt\Controllers\Frontend::before')
     ->bind('visitors');
   
@@ -89,6 +102,9 @@ function init(Silex\Application $app)
  * Reuseable config
  */
 function loadconfig(Silex\Application $app) {
+  if(!$app) {
+    global $app;
+  }
   // get the extension configuration
   $yamlparser = new \Symfony\Component\Yaml\Parser();
   $config = $yamlparser->parse(file_get_contents(__DIR__.'/config.yml'));
@@ -108,6 +124,9 @@ function loadconfig(Silex\Application $app) {
  * Check who the visitor is
  */
 function checkvisitor(Silex\Application $app) {
+  if(!$app) {
+    global $app;
+  }
 
   $session = new \Visitors\Session($app);
   //\util::var_dump($session);
@@ -126,6 +145,7 @@ function checkvisitor(Silex\Application $app) {
   if($current_visitor) {
     return $current_visitor;
   }
+  return false;
 }
 
 /**
@@ -198,17 +218,52 @@ function login(Silex\Application $app) {
       echo "Original error message: " . $e->getMessage();
     }
   } else {
-    // TODO: make this a templateable block
-    foreach($config['providers'] as $provider => $values) {
-      if($values['enabled']==true) {
-        $providers[] = '<li><a class="login '. $provider .'" href="/'.$config['basepath'].'/login?provider='. $provider .'">'. $provider .'</a></li>';
-      }
-    }
-    $markup .= "<h2>Login with one of the following</h2>\n";
-    $markup .= '<ul>'.join("\n", $providers)."</ul>\n";
+    $markup .= showvisitorlogin();
   }
 
   return \Visitors\page($app, 'login', $title, $markup);
+}
+
+/**
+ *
+ */
+function showvisitorlogin() {
+  // get the extension configuration
+  if(!$config) {
+    $config = \Visitors\loadconfig($app);
+  }
+
+  $markup = '';
+
+  foreach($config['providers'] as $provider => $values) {
+    if($values['enabled']==true) {
+      $providers[] = '<li><a class="login '. $provider .'" href="/'.$config['basepath'].'/login?provider='. $provider .'">'. $provider .'</a></li>';
+    }
+  }
+  $markup .= "<h2>Login with one of the following</h2>\n";
+  $markup .= '<ul>'.join("\n", $providers)."</ul>\n";
+
+  return $markup;
+}
+
+/**
+ *
+ */
+function showvisitorlogout() {
+  // get the extension configuration
+  if(!$config) {
+    $config = \Visitors\loadconfig($app);
+  }
+
+  $logoutlink = '<a class="logout" href="/'.$config['basepath'].'/logout">logout</a>';
+  return $logoutlink;
+}
+
+/**
+ *
+ */
+function showvisitorprofile() {
+  return 'profile';
 }
 
 /**
@@ -236,9 +291,21 @@ function endpoint(Silex\Application $app) {
  * TODO: kill the current session
  */
 function logout(Silex\Application $app) {
-  $title = "logout page";
-  $markup = '';
-  return \Visitors\page($app, 'logout', $title, $markup);
+  if(!$app) {
+    global $app;
+  }
+  // get the extension configuration
+  if(!$config) {
+    $config = \Visitors\loadconfig($app);
+  }
+
+  $token = $app['session']->get('visitortoken');
+  $session = new \Visitors\Session($app);
+  $token = $session->clear($token);
+
+  //return redirect($config['basepath'].'/login');
+  return redirect('homepage');
+  
 }
 
 /**

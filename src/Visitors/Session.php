@@ -78,7 +78,7 @@ class Session
             $stmt->bindValue("token", $token);
             $stmt->execute();
 
-            $all = $stmt->fetchAll();
+            $all = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             return array_shift($all);
         } else {
            return false;
