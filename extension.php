@@ -18,12 +18,12 @@ function info()
     'description' => "An extension to remember authenticated visitors on your bolt.cm site",
     'author' => "Lodewijk Evers",
     'link' => "https://github.com/jadwigo/bolt-visitors",
-    'version' => "0.4",
+    'version' => "0.5",
     'required_bolt_version' => "0.7.10",
     'highest_bolt_version' => "0.8.5",
     'type' => "General",
     'first_releasedate' => "2012-12-12",
-    'latest_releasedate' => "2013-01-03",
+    'latest_releasedate' => "2013-01-04",
     'dependencies' => "",
     'priority' => 10
   );
@@ -49,7 +49,6 @@ function init(Silex\Application $app)
   require_once __DIR__.'/src/Visitors/Session.php';
 
   $recognizedvisitor = \Visitors\checkvisitor($app);
-
 
   // define twig functions and vars
   $app['twig']->addFunction('knownvisitor', new \Twig_Function_Function('Visitors\checkvisitor'));
@@ -164,7 +163,8 @@ function login(Silex\Application $app) {
 
   if($recognizedvisitor) {
     // already logged in - show the account
-    return redirect($config['basepath']);
+    return redirect('homepage');
+    //return redirect($config['basepath']);
     exit;
   }
 
@@ -218,14 +218,14 @@ function login(Silex\Application $app) {
       echo "Original error message: " . $e->getMessage();
     }
   } else {
-    $markup .= showvisitorlogin();
+    $markup .= \Visitors\showvisitorlogin();
   }
 
   return \Visitors\page($app, 'login', $title, $markup);
 }
 
 /**
- *
+ * Returns a list of links to all enabled login options
  */
 function showvisitorlogin() {
   // get the extension configuration
@@ -237,17 +237,19 @@ function showvisitorlogin() {
 
   foreach($config['providers'] as $provider => $values) {
     if($values['enabled']==true) {
-      $providers[] = '<li><a class="login '. $provider .'" href="/'.$config['basepath'].'/login?provider='. $provider .'">'. $provider .'</a></li>';
+      $providers[] = '<div><a class="btn btn-large login '. $provider .'" href="/'.$config['basepath'].'/login?provider='. $provider .'">'. $provider .'</a></div>';
     }
   }
-  $markup .= "<h2>Login with one of the following</h2>\n";
-  $markup .= '<ul>'.join("\n", $providers)."</ul>\n";
+  $markup .= '<div class="well">'."\n";
+  //$markup .= '<p class="text-info">Login with one of the following options.</p>'."\n";
+  $markup .= join("\n", $providers);
+  $markup .= "</div>\n";
 
   return $markup;
 }
 
 /**
- *
+ * Link to the logout page
  */
 function showvisitorlogout() {
   // get the extension configuration
@@ -255,15 +257,31 @@ function showvisitorlogout() {
     $config = \Visitors\loadconfig($app);
   }
 
-  $logoutlink = '<a class="logout" href="/'.$config['basepath'].'/logout">logout</a>';
+  $logoutlink = '<div class="well">'."\n";
+  $logoutlink .= '<a class="btn btn-small logout" href="/'.$config['basepath'].'/logout">Logout</a>';
+  $logoutlink .= "</div>\n";
   return $logoutlink;
 }
 
 /**
- *
+ * Show the currently logged in visitor
  */
 function showvisitorprofile() {
-  return 'profile';
+  // get the extension configuration
+  if(!$config) {
+    $config = \Visitors\loadconfig($app);
+  }
+
+  // login the visitor
+  $recognizedvisitor = \Visitors\checkvisitor($app);
+
+  if($recognizedvisitor) {
+    $username = $recognizedvisitor['username'];
+    $markup .= "<p>Hello $username.</p>";
+    $markup .= \Visitors\showvisitorlogout();
+  }
+
+  return $markup;
 }
 
 /**
@@ -321,9 +339,7 @@ function view(Silex\Application $app) {
   $recognizedvisitor = \Visitors\checkvisitor($app);
 
   if($recognizedvisitor) {
-    $username = $recognizedvisitor['username'];
-    $title = "<p>Hello $username.</p>";
-    $markup .= \util::var_dump($recognizedvisitor, true);
+    $markup = \Visitors\showvisitorprofile() ;
   } else {
     // go directly to login page
     return redirect($config['basepath'].'/login');
