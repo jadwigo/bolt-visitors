@@ -30,6 +30,42 @@ Usage
 =======================
 When installed visitors can login from 'http://example.com/visitors/login' using one of the configured authentication methods
 
+You can also use the following functions and snippets in your templates:
+
+*Looking up a user*
+
+The function `{{ knownvisitor() }}` loads the current visitor - if any, and returns `false` when no known visitor is recognized.
+
+After this function the following variables are available too:
+
+    {{ visitor.username }}
+    {{ visitor.id }}
+
+*Login page*
+
+The function `{{ showvisitorlogin() }}` shows links to all enabled login providers. After authentication a user is redirected to the homepage.
+
+*Logout link*
+
+The function `{{ showvisitorlogout() }}` shows a link to the logout page. After logging out a user is redirected to the homepage.
+
+*Profile* 
+
+The function `{{ showvisitorprofile() }}` shows the username and a logout link at the moment.
+
+*Template example*
+
+If you want to use this in a template, you can use the following code:
+
+    {% if knownvisitor() %}
+        <p>Hello, {{ visitor.username }}.</p>
+        {{ showvisitorlogout() }}
+    {% else %}
+        {{ showvisitorlogin() }}
+    {% endif %}
+
+
+
 Known issues
 =======================
 This extension needs a base template in the current theme called `base.twig` e.g.:
