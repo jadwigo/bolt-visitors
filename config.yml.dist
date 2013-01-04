@@ -7,22 +7,22 @@ basepath: "visitors"
 # enabled OpenID providers
 # options are dependent on the values for hybridauth
 providers:
-  Google:
-    enabled: true
-    keys:
-      id: "*** your id here ***"
-      secret: "*** your secret here ***"
-  Facebook:
-    enabled: true
-    keys:
-      id: "*** your id here ***"
-      secret: "*** your secret here ***"
-  Twitter:
-    enabled: true
-    keys:
-      id: "*** your key here ***"
-      secret: "*** your secret here ***"
-  OpenID:
-    enabled: true
+    Google:
+        enabled: true
+        keys:
+            id: "*** your id here ***"
+            secret: "*** your secret here ***"
+    Facebook:
+        enabled: true
+        keys:
+            id: "*** your id here ***"
+            secret: "*** your secret here ***"
+    Twitter:
+        enabled: true
+        keys:
+            id: "*** your key here ***"
+            secret: "*** your secret here ***"
+    OpenID:
+        enabled: true
 
 
