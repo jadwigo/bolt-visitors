@@ -57,7 +57,9 @@ function init(Silex\Application $app)
     $app['twig']->addFunction('showvisitorprofile', new \Twig_Function_Function('Visitors\showvisitorprofile'));
     $app['twig']->addGlobal('visitor', $recognizedvisitor);
 
-    $app['log']->add(\util::var_dump($recognizedvisitor, true));
+    // this would show the user in the debuglog, but it's actually just noise now
+    // use {{ knownvisitor() }}, {{ visitor.id }} and {{ visitor.username }} in your templates instead
+    //$app['log']->add(\util::var_dump($recognizedvisitor, true));
 
     // View visitor page
     $app->get("/{$basepath}", '\Visitors\view')
