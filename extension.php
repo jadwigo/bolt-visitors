@@ -118,6 +118,8 @@ function loadconfig(Silex\Application $app) {
     // set an endpoint for hybridauth to authenticate with
     $config["base_url"] = $app['paths']['rooturl'] . $config['basepath'] . '/endpoint';
 
+
+    $app['log']->add(\util::var_dump($config, true));
     return $config;
 }
 
@@ -180,11 +182,26 @@ function login(Silex\Application $app) {
 
         try{
             // initialize Hybrid_Auth with a given file
+
+            // get the type early - because we might need to enable it
+            $providertype = isset($config['providers'][$provider]['type'])?$config['providers'][$provider]['type']:$provider;
+
+            // enable OpenID
+            if($providertype=='OpenID' && $config['providers'][$provider]['enabled']==true) {
+                $config['providers']['OpenID']['enabled']=true;
+            }
+
+            // initialize the authentication with the modified config
             $hybridauth = new \Hybrid_Auth( $config );
 
-            // try to authenticate with the selected provider
-            $adapter = $hybridauth->authenticate( $provider );
-
+            if($providertype=='OpenID' && !empty($config['providers'][$provider]['openid_identifier'])) {
+                // try to authenticate with the selected OpenID provider
+                $providerurl = $config['providers'][$provider]['openid_identifier'];
+                $adapter = $hybridauth->authenticate( $providertype, array("openid_identifier" => $providerurl));
+            } else {
+                // try to authenticate with the selected provider
+                $adapter = $hybridauth->authenticate( $providertype );
+            }
             // then grab the user profile 
             $user_profile = $adapter->getUserProfile();
 
@@ -239,7 +256,9 @@ function showvisitorlogin() {
 
     foreach($config['providers'] as $provider => $values) {
         if($values['enabled']==true) {
-            $providers[] = '<div><a class="btn btn-large login '. $provider .'" href="/'.$config['basepath'].'/login?provider='. $provider .'">'. $provider .'</a></div>';
+            $label = !empty($values['label'])?$values['label']:$provider;
+
+            $providers[] = '<div><a class="btn btn-large login '. $provider .'" href="/'.$config['basepath'].'/login?provider='. $provider .'">'. $label .'</a></div>';
         }
     }
     $markup .= '<div class="well">'."\n";

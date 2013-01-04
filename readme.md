@@ -21,6 +21,7 @@ An example of the provider keys
 
     providers:
       Google:
+        label: "Login with google"
         enabled: true
         keys:
           id: "*** your id here ***"
@@ -87,7 +88,7 @@ You need to manually create the db tables.
 
 For Mysql:
 
-    CREATE TABLE IF NOT EXISTS `bolt_sessions` (
+    CREATE TABLE IF NOT EXISTS `bolt_visitors_sessions` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `sessiontoken` varchar(255) NOT NULL,
       `lastseen` datetime NOT NULL,
@@ -106,6 +107,6 @@ For Mysql:
 For SQLite:
 
     CREATE TABLE 'bolt_visitors' ('id' INTEGER PRIMARY KEY NOT NULL, 'username' VARCHAR(64), 'provider' VARCHAR(64), 'providerdata' TEXT);
-    CREATE TABLE 'bolt_sessions' ('id' INTEGER PRIMARY KEY NOT NULL, 'sessiontoken' VARCHAR(64), 'lastseen' DATETIME, 'visitor_id' INTEGER);
+    CREATE TABLE 'bolt_visitors_sessions' ('id' INTEGER PRIMARY KEY NOT NULL, 'sessiontoken' VARCHAR(64), 'lastseen' DATETIME, 'visitor_id' INTEGER);
 
 Editing SQLite databases is relatively easy with a tool like phpLiteAdmin ( <a href="http://phpliteadmin.googlecode.com">http://phpliteadmin.googlecode.com</a> )

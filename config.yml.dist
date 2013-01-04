@@ -8,21 +8,35 @@ basepath: "visitors"
 # options are dependent on the values for hybridauth
 providers:
     Google:
+        type: Google
+        label: "Login with Google"
         enabled: true
         keys:
             id: "*** your id here ***"
             secret: "*** your secret here ***"
     Facebook:
+        type: Facebook
+        label: "Login with Facebook"
         enabled: true
         keys:
             id: "*** your id here ***"
             secret: "*** your secret here ***"
     Twitter:
+        type: Twitter
+        label: "Authenticate with your Twitter handle"
         enabled: true
         keys:
             id: "*** your key here ***"
             secret: "*** your secret here ***"
-    OpenID:
+    ** your custom id **:
+        type: OpenID
+        label: "** your label here **"
         enabled: true
+        openid_identifier: "** your openid authentication url here **"
+    ** another custom id **:
+        type: OpenID
+        label: "** another label here **"
+        enabled: true
+        openid_identifier: "** anoether openid authentication url here **"
 
 

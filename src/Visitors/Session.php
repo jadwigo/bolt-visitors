@@ -31,11 +31,11 @@ class Session
     public function active($visitor_id = null) 
     {
         if($visitor_id) {
-            $sql = "SELECT * from " . $this->prefix ."sessions WHERE visitor_id = :visitorid";
+            $sql = "SELECT * from " . $this->prefix ."visitors_sessions WHERE visitor_id = :visitorid";
             $stmt = $this->db->prepare($sql);
             $stmt->bindValue("visitorid", $visitor_id);
         } else {
-            $sql = "SELECT * from " . $this->prefix ."sessions";
+            $sql = "SELECT * from " . $this->prefix ."visitors_sessions";
             $stmt = $this->db->query($sql);
         }
         $stmt->execute();
@@ -56,7 +56,7 @@ class Session
         // save session <-> user to storage
         if($visitor_id) {
             // id is set to autoincrement, so let the DB handle it
-            $tablename =  $this->prefix ."sessions";
+            $tablename =  $this->prefix ."visitors_sessions";
             $content = array(
                 'visitor_id' =>  $visitor_id, 
                 'lastseen' => date('Y-m-d H:i:s', $_SERVER["REQUEST_TIME"]), 
@@ -73,7 +73,7 @@ class Session
 	public function load($token = null) 
     {
         if($token) {
-            $sql = "SELECT * from " . $this->prefix ."sessions WHERE sessiontoken = :token";
+            $sql = "SELECT * from " . $this->prefix ."visitors_sessions WHERE sessiontoken = :token";
             $stmt = $this->db->prepare($sql);
             $stmt->bindValue("token", $token);
             $stmt->execute();
@@ -89,7 +89,7 @@ class Session
 	public function update($token = null) 
     {
         if($token) {
-            $tablename =  $this->prefix ."sessions";
+            $tablename =  $this->prefix ."visitors_sessions";
             $content = array(
                 'visitor_id' =>  $visitor_id, 
                 'lastseen' => date('Y-m-d H:i:s', $_SERVER["REQUEST_TIME"])
@@ -103,7 +103,7 @@ class Session
     {
         if($token) {
             // delete current session from storage
-            $tablename =  $this->prefix ."sessions";
+            $tablename =  $this->prefix ."visitors_sessions";
             return $this->db->delete($tablename, array('sessiontoken' => $token));
             // reset session token
             $this->session->set('visitortoken', null);
@@ -115,7 +115,7 @@ class Session
     {     
         if($visitor_id) {
             // delete all visitor sessions from storage
-            $tablename =  $this->prefix ."sessions";
+            $tablename =  $this->prefix ."visitors_sessions";
             return $this->db->delete($tablename, array('visitor_id' => $visitor_id));
             // reset session token
             $this->session->set('visitortoken', null);
@@ -126,7 +126,7 @@ class Session
     public function clear_old() 
     {
         // delete all old sessions from storage
-        $sql = "DELETE FROM " . $this->prefix ."sessions  WHERE lastseen <= :toooldtime";
+        $sql = "DELETE FROM " . $this->prefix ."visitors_sessions  WHERE lastseen <= :toooldtime";
         $stmt = $this->db->prepare($sql);
         $days14 = date('Y-m-d H:i:s', ($_SERVER["REQUEST_TIME"] - (60*60*24*14)));
         $stmt->bindValue("toooldtime", $days14); // 14 days ago
