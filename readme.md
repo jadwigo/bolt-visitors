@@ -9,6 +9,8 @@ Installation
 =======================
 Download and extract the extension to a directory called Visitors in your Bolt extension directory.
 
+Download hybridauth from <a href="http://hybridauth.sourceforge.net/download.html">http://hybridauth.sourceforge.net/download.html</a> and extract it in the `Visitors/hybridauth` directory.
+
 Create the database tables manually by using the queries below.
 
 Copy `config.yml.dist` to `config.yml` in the same directory.
