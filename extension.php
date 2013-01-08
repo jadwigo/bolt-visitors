@@ -56,10 +56,7 @@ function init(Silex\Application $app)
     $recognizedvisitor = \Visitors\Controller::checkvisitor($app);
 
     // define twig functions and vars
-    $app['twig']->addFunction('knownvisitor', new \Twig_Function_Function('Visitors\Controller::checkvisitor'));
-    $app['twig']->addFunction('showvisitorlogin', new \Twig_Function_Function('Visitors\Controller::showvisitorlogin'));
-    $app['twig']->addFunction('showvisitorlogout', new \Twig_Function_Function('Visitors\Controller::showvisitorlogout'));
-    $app['twig']->addFunction('showvisitorprofile', new \Twig_Function_Function('Visitors\Controller::showvisitorprofile'));
+    $app['twig']->addExtension(new Visitors_Twig_Extension());
     $app['twig']->addGlobal('visitor', $recognizedvisitor);
 
     // this would show the user in the debuglog, but it's actually just noise now
@@ -104,7 +101,78 @@ function init(Silex\Application $app)
 
 }
 
+/**
+ * Twig functions
+ */
+class Visitors_Twig_Extension extends \Twig_Extension
+{
+    private $twig = null;
 
+    /**
+     */
+    public function initRuntime(\Twig_Environment $environment)
+    {
+        $this->twig = $environment;
+    }
+
+    /**
+     * Return the name of the extension
+     */
+    public function getName()
+    {
+        return 'visitors';
+    }
+
+    /**
+     * The functions we add
+     */
+    public function getFunctions()
+    {
+        return array(
+            'knownvisitor' =>  new \Twig_Function_Method($this, 'checkvisitor'),
+            'showvisitorlogin' =>  new \Twig_Function_Method($this, 'showvisitorlogin'),
+            'showvisitorlogout' =>  new \Twig_Function_Method($this, 'showvisitorlogout'),
+            'showvisitorprofile' =>  new \Twig_Function_Method($this, 'showvisitorprofile'),
+        );
+    }
+
+    /**
+     * Check who the visitor is
+     */
+    function checkvisitor() {
+        $result = \Visitors\Controller::checkvisitor();
+        return $result;
+    }
+    
+    /**
+     * Returns a list of links to all enabled login options
+     */
+    function showvisitorlogin() {
+        $result = \Visitors\Controller::showvisitorlogin();
+        return $result;
+    }
+    
+    /**
+     * Link to the logout page
+     */
+    function showvisitorlogout() {
+        $result = \Visitors\Controller::showvisitorlogout();
+        return $result;
+    }
+    
+    /**
+     * Show the currently logged in visitor
+     */
+    function showvisitorprofile() {
+        $result = \Visitors\Controller::showvisitorprofile();
+        return $result;
+    }
+
+}
+
+/**
+ * Global controller
+ */
 class Controller
 {
     /**
