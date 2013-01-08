@@ -5,6 +5,9 @@ namespace Visitors;
 use Bolt;
 use Silex;
 
+/**
+ * The visitor handles the database storage of known visitors
+ */
 class Visitor
 {
     var $visitor;

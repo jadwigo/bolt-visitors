@@ -103,6 +103,8 @@ function init(Silex\Application $app)
 
 /**
  * Twig functions
+ *
+ * Most of these just call \Visitors\Controller in some way
  */
 class Visitors_Twig_Extension extends \Twig_Extension
 {
@@ -172,6 +174,13 @@ class Visitors_Twig_Extension extends \Twig_Extension
 
 /**
  * Global controller
+ *
+ * This handles the front end for the extension:
+ *  - logging in,
+ *  - initializing sessions
+ *  - output for the twig extension class
+ *  - pages for loggin in, loggin out
+ *  - the endpoint for hybridauth
  */
 class Controller
 {

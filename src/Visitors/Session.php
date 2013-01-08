@@ -5,6 +5,9 @@ namespace Visitors;
 use Bolt;
 use Silex;
 
+/**
+ * The session handles the database storage of session id's 
+ */
 class Session
 {
     private $db;
