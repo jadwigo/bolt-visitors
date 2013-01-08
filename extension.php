@@ -232,6 +232,7 @@ class Controller
             }
         } else {
             $markup = \Visitors\Controller::showvisitorlogin();
+            //$markup = new \Twig_Markup($markup, 'UTF-8');
         }
     
         return \Visitors\Controller::page($app, 'login', $title, $markup);
