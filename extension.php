@@ -70,7 +70,7 @@ function init(Silex\Application $app)
     $app->get("/{$basepath}/", '\Visitors\view')
         ->before('Bolt\Controllers\Frontend::before')
         ->bind('visitors');
-    
+
     // View visitor page (again)
     $app->get("/{$basepath}/view", '\Visitors\view')
         ->before('Bolt\Controllers\Frontend::before')
@@ -80,12 +80,12 @@ function init(Silex\Application $app)
     $app->get("/{$basepath}/login", '\Visitors\login')
         ->before('Bolt\Controllers\Frontend::before')
         ->bind('visitorslogin');
-    
+
     // Logout from visitor page
     $app->get("/{$basepath}/logout", '\Visitors\logout')
         ->before('Bolt\Controllers\Frontend::before')
         ->bind('visitorslogout');
-    
+
     // View visitor page
     $app->get("/{$basepath}/view", '\Visitors\view')
         ->before('Bolt\Controllers\Frontend::before')
@@ -119,7 +119,7 @@ function loadconfig(Silex\Application $app) {
     $config["base_url"] = $app['paths']['rooturl'] . $config['basepath'] . '/endpoint';
 
 
-    $app['log']->add(\util::var_dump($config, true));
+    //$app['log']->add(\util::var_dump($config, true));
     return $config;
 }
 
@@ -173,7 +173,7 @@ function login(Silex\Application $app) {
     }
 
     //$markup .= \util::var_dump($config, true);
- 
+
     $provider = \util::get_var('provider', false);
 
     if($provider) {
@@ -202,7 +202,7 @@ function login(Silex\Application $app) {
                 // try to authenticate with the selected provider
                 $adapter = $hybridauth->authenticate( $providertype );
             }
-            // then grab the user profile 
+            // then grab the user profile
             $user_profile = $adapter->getUserProfile();
 
             // TODO: check if user profile is known internally - and load it
@@ -221,8 +221,6 @@ function login(Silex\Application $app) {
                 $session = new \Visitors\Session($app);
                 $token = $session->login($known_visitor['id']);
 
-                $app['session']->setFlash('info', '<p>You are logged in as '.$visitor->visitor['username'].' now</p>');
-                
                 return redirect('homepage');
             }
 
@@ -266,6 +264,8 @@ function showvisitorlogin() {
     $markup .= join("\n", $providers);
     $markup .= "</div>\n";
 
+    $markup = new \Twig_Markup($markup, 'UTF-8');
+
     return $markup;
 }
 
@@ -281,6 +281,9 @@ function showvisitorlogout() {
     $logoutlink = '<div class="well">'."\n";
     $logoutlink .= '<a class="btn btn-small logout" href="/'.$config['basepath'].'/logout">Logout</a>';
     $logoutlink .= "</div>\n";
+
+    $logoutlink = new \Twig_Markup($logoutlink, 'UTF-8');
+
     return $logoutlink;
 }
 
@@ -302,6 +305,8 @@ function showvisitorprofile() {
         $markup .= \Visitors\showvisitorlogout();
     }
 
+    $markup = new \Twig_Markup($markup, 'UTF-8');
+
     return $markup;
 }
 
@@ -315,7 +320,7 @@ function endpoint(Silex\Application $app) {
     $config = \Visitors\loadconfig($app);
 
     require_once( __DIR__."/hybridauth/hybridauth/Hybrid/Auth.php" );
-    require_once( __DIR__."/hybridauth/hybridauth/Hybrid/Endpoint.php" ); 
+    require_once( __DIR__."/hybridauth/hybridauth/Hybrid/Endpoint.php" );
 
     \Hybrid_Endpoint::process();
 
@@ -344,7 +349,7 @@ function logout(Silex\Application $app) {
 
     //return redirect($config['basepath'].'/login');
     return redirect('homepage');
-    
+
 }
 
 /**
@@ -375,7 +380,7 @@ function view(Silex\Application $app) {
  */
 function page(Silex\Application $app, $type, $title, $markup) {
     $template = 'base.twig';
- 
+
     $body = $app['twig']->render($template, array('title' => $title, 'markup' => $markup));
 
     return new Response($body, 200, array('Cache-Control' => 's-maxage=3600, public'));
