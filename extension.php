@@ -65,41 +65,41 @@ function init(Silex\Application $app)
     // use {{ knownvisitor() }}, {{ visitor.id }} and {{ visitor.username }} in your templates instead
     //$app['log']->add(\util::var_dump($recognizedvisitor, true));
 
-    // View visitor page
-    $app->get("/{$basepath}", '\Visitors\view')
-        ->before('Bolt\Controllers\Frontend::before')
-        ->bind('visitors');
-
-    // for those people who add slashes to the end of the uri
-    $app->get("/{$basepath}/", '\Visitors\view')
-        ->before('Bolt\Controllers\Frontend::before')
-        ->bind('visitors');
-
-    // View visitor page (again)
-    $app->get("/{$basepath}/view", '\Visitors\view')
-        ->before('Bolt\Controllers\Frontend::before')
-        ->bind('visitorsview');
+    $visitors_controller = $app['controllers_factory'];
+    // View visitor page or redirect
+    $visitors_controller
+        ->match('', '\Visitors\view')
+        ->bind('visitorsroot')
+        ;
+    $visitors_controller
+        ->match('/', '\Visitors\view')
+        ->bind('visitorsslash')
+        ;
+    $visitors_controller
+        ->match('/view', '\Visitors\view')
+        ->bind('visitorsview')
+        ;
 
     // Login to visitor page
-    $app->get("/{$basepath}/login", '\Visitors\login')
-        ->before('Bolt\Controllers\Frontend::before')
-        ->bind('visitorslogin');
+    $visitors_controller
+        ->match('/login', '\Visitors\login')
+        ->bind('visitorslogin')
+        ;
 
     // Logout from visitor page
-    $app->get("/{$basepath}/logout", '\Visitors\logout')
-        ->before('Bolt\Controllers\Frontend::before')
-        ->bind('visitorslogout');
-
-    // View visitor page
-    $app->get("/{$basepath}/view", '\Visitors\view')
-        ->before('Bolt\Controllers\Frontend::before')
-        ->bind('visitorsview');
+    $visitors_controller
+        ->match('/logout', '\Visitors\logout')
+        ->bind('visitorslogout')
+        ;
 
     // Endpoint for hybridauth to authenticate with
     // Callbacks and keys are routed here
-    $app->match("/{$basepath}/endpoint", '\Visitors\endpoint')
-        ->before('Bolt\Controllers\Frontend::before')
-        ->bind('visitorsendpoint');
+    $visitors_controller
+        ->match('/endpoint', '\Visitors\endpoint')
+        ->bind('visitorsendpoint')
+        ;
+
+    $app->mount("/{$basepath}", $visitors_controller);
 
 }
 
