@@ -97,6 +97,7 @@ class Visitor
     }
 
     // delete visitor
+    // TODO: fix this if needed
     public function delete($visitor_id = null) {
         //$this->db->delete($this->visitor);
     }

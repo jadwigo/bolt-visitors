@@ -1,6 +1,10 @@
 <?php
 // Visitors Extension for Bolt, by Lodewijk Evers
 
+/**
+ * TODO: check if old sessions linger and clean them up with a cron hook
+ */
+
 namespace Visitors;
 
 use Silex;
@@ -132,19 +136,14 @@ function checkvisitor(Silex\Application $app) {
     }
 
     $session = new \Visitors\Session($app);
-    //\util::var_dump($session);
-    //$sessions = $session->active();
-    //\util::var_dump($sessions);
 
     $token = $app['session']->get('visitortoken');
-    //\util::var_dump($token);
 
     $current = $session->load($token);
-    //\util::var_dump($current);
 
     $visitor = new \Visitors\Visitor($app);
     $current_visitor = $visitor->load_by_id($current['visitor_id']);
-    //\util::var_dump($current_visitor);
+
     if($current_visitor) {
         return $current_visitor;
     }
@@ -162,7 +161,7 @@ function login(Silex\Application $app) {
     // get the extension configuration
     $config = \Visitors\loadconfig($app);
 
-    // login the visitor if avaulable
+    // login the visitor if available
     $recognizedvisitor = \Visitors\checkvisitor($app);
 
     if($recognizedvisitor) {
@@ -171,8 +170,6 @@ function login(Silex\Application $app) {
         //return redirect($config['basepath']);
         exit;
     }
-
-    //$markup .= \util::var_dump($config, true);
 
     $provider = \util::get_var('provider', false);
 
@@ -205,15 +202,15 @@ function login(Silex\Application $app) {
             // then grab the user profile
             $user_profile = $adapter->getUserProfile();
 
-            // TODO: check if user profile is known internally - and load it
             if($user_profile) {
                 $visitor = new \Visitors\Visitor($app);
                 $visitor->setProvider( $provider );
                 $visitor->setProfile( $user_profile );
 
+                // check if user profile is known internally - and load it
                 $known_visitor = $visitor->checkExisting();
 
-                // TODO: create a new user profile if it does not exist yet - and load it
+                // create a new user profile if it does not exist yet - and load it
                 if(!$known_visitor) {
                     $known_visitor = $visitor->save();
                 }
@@ -224,11 +221,6 @@ function login(Silex\Application $app) {
                 return redirect('homepage');
             }
 
-
-            // show us the money
-            //$markup .= \util::var_dump($token, true);
-            //$markup .= \util::var_dump($user_profile, true);
-            //$markup .= \util::var_dump($known_visitor, true);
         }
         catch( Exception $e ){
             echo "Error: please try again!";
@@ -260,7 +252,6 @@ function showvisitorlogin() {
         }
     }
     $markup .= '<div class="well">'."\n";
-    //$markup .= '<p class="text-info">Login with one of the following options.</p>'."\n";
     $markup .= join("\n", $providers);
     $markup .= "</div>\n";
 
@@ -331,8 +322,6 @@ function endpoint(Silex\Application $app) {
  * Logout visitor page
  *
  * Remove / Reset a visitor session
- *
- * TODO: kill the current session
  */
 function logout(Silex\Application $app) {
     if(!$app) {
@@ -347,7 +336,6 @@ function logout(Silex\Application $app) {
     $session = new \Visitors\Session($app);
     $token = $session->clear($token);
 
-    //return redirect($config['basepath'].'/login');
     return redirect('homepage');
 
 }
@@ -368,9 +356,9 @@ function view(Silex\Application $app) {
         $markup = \Visitors\showvisitorprofile() ;
     } else {
         // go directly to login page
+        // TODO: This has some problems when the path is not initialized right
         return redirect($config['basepath'].'/login');
     }
-
 
     return \Visitors\page($app, 'view', $title, $markup);
 }
